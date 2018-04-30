@@ -35,22 +35,19 @@ def print_help():
         print()
         print('  -r, --repo <COPR repo name>        COPR Repository name.')
         print('  -g, --group <group name>           Group name.')
-        print('  -p, --project <group/reponame>     Project name.')
         print()
 
 try:
-	opts, args = getopt.gnu_getopt(sys.argv, 't:r:g:p:', [
-		'token=', 'repo=', 'group=', 'project='])
+	opts, args = getopt.gnu_getopt(sys.argv, 'g:p:', [
+		'group=', 'project='])
 
 except getopt.GetoptError as e:
     print('ERROR: ' + str(e))
     print_help()
     sys.exit(1)
 
-token = None
-repo = None
+repo = REPO
 group = 'pki'
-project= None
 
 for o, a in opts:
     if o in ('-r', '--repo'):
@@ -59,23 +56,17 @@ for o, a in opts:
     elif o in ('-g', '--group'):
         group = a
 
-    elif o in ('-p', '--project'):
-	    project = a
-
     else:
         print('ERROR: unknown option ' + o)
         print_help()
         sys.exit(1)
 
-if not repo and not project:
-    repo = REPO
-
 # Initialize Utils with the Repo we are going to work with
 util = Utils(repo=REPO)
 
-projectID = util.getProjectID(searchQuery=project, name=repo, group=group)
+projectID = util.getProjectID(name=repo, group=group)
 
-if projectID is None:
+if not projectID:
     print('ERROR: projectID cannot be obtained') 
     sys.exit(2)
 
@@ -86,14 +77,8 @@ cli = CoprClient.create_from_file_config()
 
 for deleteBuildID in deleteBuildIDs:
     response = util.deleteBuild(buildID=deleteBuildID, login=cli.login, token=cli.token)
-    if response is not None:
-        result = {
-            204: "was removed successfully",
-            400: "can't be deleted currently",
-            403: "authroization failed",
-            404: "doesn't exists"
-        }[response.status_code]
-        print("Build ID:", deleteBuildID, result)
-    else:
+    if not response:
         print("Build ID:", deleteBuildID, " can't be deleted for unknown reasons!")
+    else:
+        print("Build ID:", deleteBuildID, response)      
     

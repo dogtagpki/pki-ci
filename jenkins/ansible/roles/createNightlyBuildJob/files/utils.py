@@ -24,16 +24,19 @@ import requests
 from requests.auth import HTTPBasicAuth
 import datetime
 
-
-
 class Utils:
+
+    DELETE_RESULT = {
+            204: "was removed successfully",
+            400: "can't be deleted currently",
+            403: "authroization failed",
+            404: "doesn't exists"
+    }
 
     def __init__(self, repo, copr_url=None):
         """
-            :param unicode username: username used by default for all requests
-            :param unicode token: copr api token
-            :param unicode copr_url: used as copr projects root
-            :param bool no_config: helper flag to indicate that no config was provided
+            :param unicode repo: COPR repo to work on
+            :param unicode copr_url: COPR URL to access end points
         """
 
         self.repo = repo
@@ -57,7 +60,7 @@ class Utils:
         # Extract data in JSON format
         return response.json()
 
-    def getProjectID(self, searchQuery=None, name=None, group='pki'):
+    def getProjectID(self, name=None, group='pki'):
         """
             :param unicode searchQuery: search parameter similar to search box in COPR site
             :param unicode name: repository name to search for
@@ -67,9 +70,7 @@ class Utils:
         url = "{0}/projects".format(self.api_url)
 
         # Define params to be sent to the End Point
-        if searchQuery is not None:
-            PARAMS = {'search_query': searchQuery}
-        elif name is not None and group is not None:
+        if name is not None and group is not None:
             PARAMS = {'group': group, 'name': name}
         else:
             return None
@@ -136,7 +137,7 @@ class Utils:
         # Embed Basic Auth in the DELETE request
         response = requests.delete(url=url, headers=headers, auth=HTTPBasicAuth(login, token))
 
-        return response
+        return self.DELETE_RESULT[response.status_code]
 
         
 
