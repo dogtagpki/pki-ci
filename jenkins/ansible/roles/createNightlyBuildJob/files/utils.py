@@ -36,8 +36,7 @@ class CoprUtil:
 
     def __init__(self, client=None):
         """
-            :param unicode repo: COPR repo to work on
-            :param unicode copr_url: COPR URL to access end points
+            :param CoprClient client: COPR client v2
         """
         self.client = client
         self.copr_api_url = client.api_root or u"https://copr.fedorainfracloud.org/api_2"
@@ -56,7 +55,6 @@ class CoprUtil:
 
     def getProjectID(self, name=None, group='pki'):
         """
-            :param unicode searchQuery: search parameter similar to search box in COPR site
             :param unicode name: repository name to search for
             :param unicode group: group name of the project
         """
@@ -79,16 +77,15 @@ class CoprUtil:
             project = projects[0]['project']
             return project['id']
 
-    def findBuildIDs(self, projectID=None, package=None, minAge=None):
+    def findBuildIDs(self, projectID=None, minAge=None):
         """
             :param integer projectID: project ID
-            :param unicode package: package name 
             :param integer days: no of latest days to filter out
         """
         # Construct URL for builds End point
         url = "{0}/builds".format(self.copr_api_url)
 
-        if not projectID or not package or not minAge:
+        if not projectID or not minAge:
             raise ValueError('projectID, package and days are required') 
         
         PARAMS = {'project_id': projectID}
@@ -106,19 +103,16 @@ class CoprUtil:
         for buildData in receivedData['builds']:
             build = buildData['build']
             timeStamp = datetime.datetime.fromtimestamp(build['submitted_on'])
-            if(currTimeStamp - timeStamp >= datetime.timedelta(days=minAge) and
-                build['package_name'] == package):
+            if(currTimeStamp - timeStamp >= datetime.timedelta(days=minAge)):
                 buildIDs.append(build['id'])
 
         return buildIDs
 
-    def deleteBuild(self, buildID=None):
+    def deleteBuild(self, buildID):
         """
             :param integer buildID: build ID
-            :param unicode login: COPR login parsed from ~/.config/copr
-            :param unicode token: COPR token parsed from ~/.config/copr
         """
-        if buildID is None:
+        if not buildID:
             raise ValueError("Build ID is required")
         
         if type(buildID) is list:

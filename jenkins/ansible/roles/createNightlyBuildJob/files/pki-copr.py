@@ -71,12 +71,9 @@ if not projectID:
     print('ERROR: project not found') 
     sys.exit(2)
 
-deleteBuildIDs = util.findBuildIDs(projectID=projectID, package='pki-core', minAge=7)
+deleteBuildIDs = util.findBuildIDs(projectID=projectID, minAge=7)
 
 for deleteBuildID in deleteBuildIDs:
     response = util.deleteBuild(buildID=deleteBuildID)
-    if not response:
-        print("Build ID:", deleteBuildID, " can't be deleted for unknown reasons!")
-    else:
-        print("Build ID:", deleteBuildID, response)      
+    print("Build ID:", deleteBuildID, response)      
     
